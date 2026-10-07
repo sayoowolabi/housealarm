@@ -31,10 +31,42 @@ def make_sticker(frame, prev_gray):
       5. Cut it out: use the mask as the alpha channel, crop to the
          bounding box, add a white outline by dilating the mask.
     """
+
+    gray = preprocess_frame(frame)
+
     # Placeholder: whole frame, fully opaque (alpha = 255 everywhere).
     sticker = cv2.cvtColor(frame, cv2.COLOR_BGR2BGRA)
     return sticker
 
+def preprocess_frame(frame):
+    """
+    Preprocess a video frame before motion detection.
+
+    Converts the frame to greyscale and applies Gaussian blur to reduce
+    noise. The average brightness is then checked to determine whether
+    the frame is dark. If it is a night frame, CLAHE is applied to
+    improve the contrast and make objects easier to distinguish from
+    the background.
+
+    Parameters:
+        frame: The original colour video frame.
+
+    Returns:
+        The preprocessed greyscale frame.
+    """
+    #Converts each video frame from colour to greyscale
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+    #Applies a small Gaussian blur to remove tiny pixel-level changes 
+    gray = cv2.GaussianBlur(gray, (5, 5), 0)
+
+    #Calculates the average brightness of the frame.
+    if np.mean(gray) < 70:
+        #increases the contrast of dark footage to better distinguish between objects
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+        gray = clahe.apply(gray)
+
+    return gray
 
 def extract_stickers(video_path, every_n_frames=15, progress_callback=None):
     """
@@ -66,7 +98,8 @@ def extract_stickers(video_path, every_n_frames=15, progress_callback=None):
             if sticker is not None:
                 stickers.append((index / fps, sticker))
 
-        prev_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        #compare preprocessed previous frame VS preprocessed current frame
+        prev_gray = preprocess_frame(frame)
         index += 1
         if progress_callback:
             progress_callback(min(index / total, 1.0))
