@@ -34,6 +34,15 @@ def make_sticker(frame, prev_gray):
 
     gray = preprocess_frame(frame)
 
+    if prev_gray is None:
+        return None
+
+    motion_mask = create_motion_mask(gray, prev_gray)
+
+    if cv2.countNonZero(motion_mask) < 500:
+        # If the motion is too small, return None
+        return None
+    
     # Placeholder: whole frame, fully opaque (alpha = 255 everywhere).
     sticker = cv2.cvtColor(frame, cv2.COLOR_BGR2BGRA)
     return sticker
@@ -68,6 +77,23 @@ def preprocess_frame(frame):
 
     return gray
 
+def create_motion_mask(current_gray, prev_gray):
+    """
+    Create a binary mask showing areas that changed between two frames.
+
+    The current frame is compared with the previous frame using absolute
+    difference. Pixels with a large enough change are turned white (255),
+    while unchanged pixels remain black (0).
+    """
+
+    #Calculates the absolute difference between the current and previous frames
+    frame_difference = cv2.absdiff(prev_gray, current_gray)
+
+    #Applies a binary threshold to the frame difference to create a mask of moving areas
+    _, motion_mask = cv2.threshold(frame_difference, 25, 255, cv2.THRESH_BINARY)
+
+    return motion_mask
+
 def extract_stickers(video_path, every_n_frames=15, progress_callback=None):
     """
     Read a video and return a chronological list of (time_in_seconds, sticker).
@@ -98,8 +124,8 @@ def extract_stickers(video_path, every_n_frames=15, progress_callback=None):
             if sticker is not None:
                 stickers.append((index / fps, sticker))
 
-        #compare preprocessed previous frame VS preprocessed current frame
-        prev_gray = preprocess_frame(frame)
+            #compare preprocessed previous frame VS preprocessed current frame
+            prev_gray = preprocess_frame(frame)
         index += 1
         if progress_callback:
             progress_callback(min(index / total, 1.0))
