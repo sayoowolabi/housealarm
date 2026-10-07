@@ -1,0 +1,8 @@
+venv/
+footage/
+output/
+__pycache__/
+.idea/
+*.mp4
+*.mov
+*.avi

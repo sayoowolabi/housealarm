@@ -1,0 +1,64 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Figtree:wght@400;600&display=swap');
+
+/* Page background: a craft cutting mat - dark green with a fine and a bold grid */
+.stApp {
+  background-color: #23463C;
+  background-image:
+    linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px),
+    linear-gradient(rgba(255,255,255,.11) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.11) 1px, transparent 1px);
+  background-size: 24px 24px, 24px 24px, 120px 120px, 120px 120px;
+}
+[data-testid="stHeader"] { background: transparent; }
+[data-testid="stSidebar"] { background: #1B3830; }
+
+html, body, p, label, li, .stMarkdown { font-family: 'Figtree', system-ui, sans-serif; }
+h1, h2, h3 { font-family: 'Fredoka', 'Figtree', system-ui, sans-serif !important; }
+h1 { font-size: 3.2rem !important; line-height: 1.05 !important; }
+
+/* The three steps, shown as little sticker labels */
+.steps { display: flex; flex-wrap: wrap; gap: 14px; margin: 6px 0 28px; }
+.step {
+  background: #F1F4EE; color: #1B2B26; border-radius: 12px;
+  padding: 8px 14px; font-weight: 600; box-shadow: 0 4px 0 rgba(0,0,0,.25);
+}
+.step:nth-child(1) { transform: rotate(-2deg); }
+.step:nth-child(2) { transform: rotate(1.5deg); }
+.step:nth-child(3) { transform: rotate(-1deg); }
+.step b { color: #C0392B; margin-right: 6px; }
+
+/* Upload box: dashed yellow line, like a cutting guide */
+[data-testid="stFileUploaderDropzone"] {
+  background: rgba(255,255,255,.06);
+  border: 2px dashed #F5C542; border-radius: 16px;
+}
+
+/* Buttons: yellow with a chunky press-down shadow */
+.stButton button, .stDownloadButton button {
+  background: #F5C542; color: #1B2B26; border: none; border-radius: 12px;
+  font-family: 'Fredoka', system-ui, sans-serif; font-size: 1.05rem;
+  padding: .55rem 1.4rem; box-shadow: 0 4px 0 #B8901F;
+}
+.stButton button:hover, .stDownloadButton button:hover { background: #FFD45C; color: #1B2B26; }
+.stButton button:active, .stDownloadButton button:active { transform: translateY(3px); box-shadow: 0 1px 0 #B8901F; }
+
+/* Sticker sheet: each image gets a white die-cut outline that follows its
+   transparent edges (stacked drop-shadows), a slight tilt, and a timestamp tag */
+.sheet {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 34px 26px; padding: 18px 6px 30px;
+}
+.sticker { margin: 0; text-align: center; transform: rotate(var(--tilt)); transition: transform .15s ease; }
+.sticker:hover { transform: rotate(0deg) scale(1.05); }
+.sticker img {
+  max-width: 100%; border-radius: 6px;
+  filter: drop-shadow(3px 0 0 #fff) drop-shadow(-3px 0 0 #fff)
+          drop-shadow(0 3px 0 #fff) drop-shadow(0 -3px 0 #fff)
+          drop-shadow(0 8px 10px rgba(0,0,0,.4));
+}
+.sticker figcaption {
+  display: inline-block; margin-top: 12px; padding: 2px 11px; border-radius: 999px;
+  background: #F5C542; color: #1B2B26; font-weight: 600; font-size: .85rem;
+}
+@media (prefers-reduced-motion: reduce) { .sticker { transition: none; } }
