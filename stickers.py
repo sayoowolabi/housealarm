@@ -5,8 +5,7 @@ The interface (app.py) only calls extract_stickers(). Everything that turns a
 video into sticker cutouts lives here, so this file can be developed, tested
 and submitted independently of the interface.
 
-CURRENT STATE: steps 1-2 (Sayo), 3 (Pati) and 5-6 (Chloe) are in.
-Step 4 (enhancement) is not in yet.
+CURRENT STATE: steps 1-2 (Sayo), 3-4 (Pati) and 5-6 (Chloe) are in.
 """
 
 import io
@@ -43,13 +42,16 @@ def make_sticker(frame, prev_gray):
         # If the motion is too small, return None
         return None
 
-        # Step 3 (Pati): clean the mask into one solid shape
+     # Step 3 (Pati): clean the mask into one solid shape
     cleaned = clean_mask(motion_mask)
     if cleaned is None:
         return None
 
+    # Step 4 (Pati): make the object clearer before cutting it out
+    enhanced = enhance_object(frame)
+
     # Step 5 (Chloe): cut the object out as a transparent sticker
-    return cut_out_sticker(frame, cleaned)
+    return cut_out_sticker(enhanced, cleaned)
 
 def preprocess_frame(frame):
     """
@@ -143,6 +145,37 @@ def clean_mask(mask, min_area=500):
     cv2.drawContours(filled, [largest], -1, 255, thickness=-1)
     return filled
 
+def enhance_object(frame):
+    """
+    Step 4 (Pati): make the object clearer before it is cut out.
+
+    CCTV footage is often dark, low-contrast and a bit soft. This boosts
+    the contrast with CLAHE and then sharpens the edges with an unsharp
+    mask, so the sticker looks crisp instead of murky.
+
+    Parameters:
+        frame: the original colour frame (BGR)
+
+    Returns:
+        The enhanced colour frame, same size as the input.
+    """
+    #Converts to LAB so brightness (L) is separate from colour (A and B).
+    #CLAHE only touches L, so the colours don't get changed
+    lab = cv2.cvtColor(frame, cv2.COLOR_BGR2LAB)
+    l, a, b = cv2.split(lab)
+
+    #CLAHE boosts contrast in small tiles, so dark areas get brighter
+    #without blowing out areas that are already bright
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    l = clahe.apply(l)
+    contrasted = cv2.cvtColor(cv2.merge([l, a, b]), cv2.COLOR_LAB2BGR)
+
+    #Unsharp mask: blur a copy, then take the blur away from the original.
+    #What's left is the edges, which get boosted (1.5 original - 0.5 blur)
+    blurred = cv2.GaussianBlur(contrasted, (0, 0), 2)
+    sharpened = cv2.addWeighted(contrasted, 1.5, blurred, -0.5, 0)
+
+    return sharpened
 
 def cut_out_sticker(frame, mask, outline=6, padding=10):
     """
